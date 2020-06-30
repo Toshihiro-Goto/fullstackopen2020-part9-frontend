@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Icon, SemanticICONS } from "semantic-ui-react";
 import axios from "axios";
-import { useStateValue } from "../state";
+import { useStateValue, addPatient } from "../state";
 import { Patient, Gender } from "../types";
 import { apiBaseUrl } from "../constants";
 
@@ -20,7 +20,7 @@ const PatientPage: React.FC = () => {
           `${apiBaseUrl}/patients/${id}`
         );
         setPatient(patientFromApi);
-        dispatch({ type: "ADD_PATIENT", payload: patientFromApi });
+        dispatch(addPatient(patientFromApi));
       } catch (e) {
         console.log(e);
       }
