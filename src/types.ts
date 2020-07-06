@@ -17,6 +17,7 @@ export interface Patient {
   gender: Gender;
   ssn?: string;
   dateOfBirth?: string;
+  entries: Entry[];
 }
 
 interface BaseEntry {
@@ -39,7 +40,7 @@ interface HealthCheckEntry extends BaseEntry {
   healthCheckRating: HealthCheckRating;
 }
 
-interface HospitalEntry {
+interface HospitalEntry extends BaseEntry {
   type: "Hospital";
   discharge: {
     date: Date;
@@ -47,7 +48,7 @@ interface HospitalEntry {
   };
 }
 
-interface OccupationalHealthcareEntry {
+interface OccupationalHealthcareEntry extends BaseEntry {
   type: "OccupationalHealthcare";
   employerName: string;
 }
