@@ -1,5 +1,6 @@
 import { State } from "./state";
 import { Patient, Diagnosis } from "../types";
+import { assertNever } from '../utils';
 
 export type Action =
   | {
@@ -29,8 +30,6 @@ export const setDiagnosisList = (diagnosisList: Diagnosis[]): Action => ({
   type: "SET_DIAGNOSIS_LIST",
   payload: diagnosisList
 });
-
-const assertNever = (x: never): never => (x);
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
