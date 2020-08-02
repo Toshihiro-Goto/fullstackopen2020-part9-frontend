@@ -1,5 +1,5 @@
 import { State } from "./state";
-import { Patient, Diagnosis } from "../types";
+import { Patient, Diagnosis, Entry } from "../types";
 import { assertNever } from '../utils';
 
 export type Action =
@@ -14,6 +14,10 @@ export type Action =
   | {
     type: "SET_DIAGNOSIS_LIST";
     payload: Diagnosis[];
+  }
+  | {
+    type: "ADD_ENTRY";
+    payload: { patientId: string; entry: Entry };
   };
 
 export const setPatientList = (patientList: Patient[]): Action => ({
@@ -29,6 +33,11 @@ export const addPatient = (patient: Patient): Action => ({
 export const setDiagnosisList = (diagnosisList: Diagnosis[]): Action => ({
   type: "SET_DIAGNOSIS_LIST",
   payload: diagnosisList
+});
+
+export const addEntry = (patientId: string, entry: Entry): Action => ({
+  type: "ADD_ENTRY",
+  payload: { patientId, entry }
 });
 
 export const reducer = (state: State, action: Action): State => {
@@ -59,6 +68,18 @@ export const reducer = (state: State, action: Action): State => {
           ...action.payload.reduce(
             (memo, diagnosis) => ({ ...memo, [diagnosis.code]: diagnosis }), {}
           )
+        }
+      };
+    case "ADD_ENTRY":
+      const { patientId, entry } = action.payload;
+      return {
+        ...state,
+        patients: {
+          ...state.patients,
+          [patientId]: {
+            ...state.patients[patientId],
+            entries: [...state.patients[patientId].entries, entry]
+          }
         }
       };
     default:

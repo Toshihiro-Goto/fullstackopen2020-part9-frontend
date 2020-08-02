@@ -28,6 +28,9 @@ interface BaseEntry {
   diagnosisCodes?: Array<Diagnosis['code']>;
 }
 
+const entryTypes = ["HealthCheck", "Hospital", "OccupationalHealthcare"] as const;
+export type EntryType = typeof entryTypes[number];
+
 export enum HealthCheckRating {
   "Healthy" = 0,
   "LowRisk" = 1,
