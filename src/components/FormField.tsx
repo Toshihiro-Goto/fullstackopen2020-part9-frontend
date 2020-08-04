@@ -112,3 +112,20 @@ export const DiagnosisSelection = ({
     </Form.Field>
   );
 };
+
+interface DateProps extends FieldProps {
+  label: string;
+}
+
+export const DateField: React.FC<DateProps> = ({
+  field,
+  label
+}) => (
+    <Form.Field>
+      <label>{label}</label>
+      <Field {...field} type="date" />
+      <div style={{ color: 'red' }}>
+        <ErrorMessage name={field.name} />
+      </div>
+    </Form.Field>
+  );

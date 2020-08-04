@@ -1,13 +1,26 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import React, { FC } from 'react';
 import { Formik, Field } from 'formik';
-import { Entry, HealthCheckRating } from '../../types';
+import { HealthCheckRating } from '../../types';
 import { Form, Grid, Button } from 'semantic-ui-react';
-import { TextField, SelectField, SelectOption, DiagnosisSelection, NumberField } from '../../components/FormField';
+import { TextField, SelectField, SelectOption, DiagnosisSelection, NumberField, DateField } from '../../components/FormField';
 import { useStateValue } from '../../state';
-    
-export type FormValues<T> = T extends infer U ? Omit<U, "id" | "entries"> : never;
-export type EntryFormValues = FormValues<Entry>;
+import { assertNever } from '../../utils';
+
+export type EntryFormValues =
+    {
+        type: "Hospital" | "OccupationalHealthcare" | "HealthCheck";
+        description: string;
+        date: string;
+        specialist: string;
+        diagnosisCodes: string[];
+        healthCheckRating: HealthCheckRating;
+        discharge: {
+            date: string;
+            criteria: string;
+        };
+        employerName: string;
+    };
 
 interface Props {
     onSubmit: (values: EntryFormValues) => void;
@@ -31,15 +44,80 @@ export const AddEntryForm: FC<Props> = ({ onSubmit, onCancel }) => {
                 date: "",
                 specialist: "",
                 diagnosisCodes: [],
-                healthCheckRating: HealthCheckRating.CriticalRisk
+                healthCheckRating: HealthCheckRating.Healthy,
+                discharge: {
+                    date: "",
+                    criteria: ""
+                },
+                employerName: ""
             }}
             onSubmit={onSubmit}
             validate={values => {
-                const requiredFields = ["type", "description", "date", "specialist"] as const;
-                const errors: { [field: string]: string } = {};
-                return requiredFields.reduce((errors, field) => {
-                    return values[field] ? errors : { ...errors, [field]: "Field is required." };
-                }, errors);
+                const { date, description, specialist, type, discharge, employerName, healthCheckRating } = values;
+                const requiredError = "Field is required";
+
+                type Errors = {
+                    type?: string;
+                    description?: string;
+                    date?: string;
+                    specialist?: string;
+                    diagnosisCodes?: string;
+                    healthCheckRating?: string;
+                    discharge?: {
+                        date?: string;
+                        criteria?: string;
+                    };
+                    employerName?: string;
+                };
+                const errors: Errors = {};
+
+                if (!date) {
+                    errors.date = requiredError;
+                } else if (!Date.parse(date)) {
+                    errors.date = "Date is wrong.";
+                }
+
+                if (!description) {
+                    errors.description = requiredError;
+                }
+                if (!specialist) {
+                    errors.specialist = requiredError;
+                }
+                if (!type) {
+                    errors.type = requiredError;
+                }
+
+                switch (type) {
+                    case "HealthCheck":
+                        const isHealthCheckRating = Object.values(HealthCheckRating).filter(rating => typeof rating === "number").some(rating => rating === healthCheckRating);
+                        if (!isHealthCheckRating) {
+                            errors.healthCheckRating = "Value is wrong.";
+                        }
+                        if (healthCheckRating !== 0 && !healthCheckRating) {
+                            errors.healthCheckRating = requiredError;
+                        }
+                        break;
+                    case "Hospital":
+                        const { criteria, date } = discharge;
+                        if (!criteria || !date) {
+                            errors.discharge = {};
+                            if (!criteria) {
+                                errors.discharge.criteria = requiredError;
+                            }
+                            if (!date) {
+                                errors.discharge.date = requiredError;
+                            }
+                        }
+                        break;
+                    case "OccupationalHealthcare":
+                        if (!employerName) {
+                            errors.employerName = requiredError;
+                        }
+                        break;
+                    default:
+                        assertNever(type);
+                }
+                return errors;
             }
             }
         >
@@ -72,13 +150,38 @@ export const AddEntryForm: FC<Props> = ({ onSubmit, onCancel }) => {
                     setFieldTouched={props.setFieldTouched}
                     diagnoses={Object.values(diagnoses)}
                 />
-                <Field
-                    label="healthCheckRating"
-                    name="healthCheckRating"
-                    component={NumberField}
-                    min={0}
-                    max={3}
-                />
+                {props.values.type === "HealthCheck" &&
+                    <Field
+                        label="HealthCheckRating"
+                        name="healthCheckRating"
+                        component={NumberField}
+                        min={0}
+                        max={3}
+                    />
+                }
+                {props.values.type === "Hospital" &&
+                    <>
+                        <Field
+                            label="DischargeCriteria"
+                            placeholder="DischargeCriteria"
+                            name="discharge.criteria"
+                            component={TextField}
+                        />
+                        <Field
+                            label="DischargeDate"
+                            name="discharge.date"
+                            component={DateField}
+                        />
+                    </>
+                }
+                {props.values.type === "OccupationalHealthcare" &&
+                    <Field
+                        label="EmployerName"
+                        placeholder="EmployerName"
+                        name="employerName"
+                        component={TextField}
+                    />
+                }
                 <Grid>
                     <Grid.Column floated="left" width={5}>
                         <Button type="button" onClick={onCancel} color="red">
